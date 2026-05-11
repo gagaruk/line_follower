@@ -8,7 +8,7 @@
 #define PWMA 9
 #define PWMB 3
 
-void forward(int);
+void forward(bool,bool,int);
 
 void setup() {
 
@@ -24,18 +24,22 @@ void setup() {
 
 
 void loop() {
-  forward(200);
+  forward(true, false, 200);
 }
 
-void forward(int speed){
+void forward(bool m1, bool m2, int speed){
 
   digitalWrite(STBY, HIGH);
 
-  digitalWrite(A1, HIGH);
-  digitalWrite(A2, LOW);
-  analogWrite(PWMA, 200);
+  if(m1){
+    digitalWrite(A1, HIGH);
+    digitalWrite(A2, LOW);
+    analogWrite(PWMA, 200);
+  }
 
-  digitalWrite(B1, HIGH);
-  digitalWrite(B2, LOW);
-  analogWrite(PWMB, 200);
+  if(m2){
+    digitalWrite(A1, HIGH);
+    digitalWrite(A2, LOW);
+    analogWrite(PWMA, 200);
+  }
 }
