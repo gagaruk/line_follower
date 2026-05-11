@@ -8,6 +8,9 @@
 #define PWMA 9
 #define PWMB 3
 
+#define pot A0
+int potVal = 0;
+
 void forward(bool,bool,int);
 
 void setup() {
@@ -24,7 +27,9 @@ void setup() {
 
 
 void loop() {
-  forward(true, false, 200);
+  potVal = analogRead(pot);
+
+  forward(true, false, map(potVal, 0, 1023, 0, 220));
 }
 
 void forward(bool m1, bool m2, int speed){
