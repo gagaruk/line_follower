@@ -21,3 +21,27 @@ void setup() {
   pinMode(PWMB, OUTPUT);
 
 }
+
+
+void loop() {
+  digitalWrite(A1PIN, HIGH);
+  digitalWrite(A2PIN, HIGH);
+  analogWrite(PWMA, 200);
+
+  digitalWrite(B1PIN, HIGH);
+  digitalWrite(B2PIN, HIGH);
+  analogWrite(PWMB, 200);
+}
+
+void forward(int speed){
+
+  digitalWrite(STBY, HIGH);
+
+  digitalWrite(A1PIN, HIGH);
+  digitalWrite(A2PIN, HIGH);
+  analogWrite(PWMA, 200);
+
+  digitalWrite(B1PIN, HIGH);
+  digitalWrite(B2PIN, HIGH);
+  analogWrite(PWMB, 200);
+}
