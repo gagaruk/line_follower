@@ -34,12 +34,12 @@ void forward(bool m1, bool m2, int speed){
   if(m1){
     digitalWrite(A1, HIGH);
     digitalWrite(A2, LOW);
-    analogWrite(PWMA, 200);
+    analogWrite(PWMA, speed);
   }
 
   if(m2){
     digitalWrite(A1, HIGH);
     digitalWrite(A2, LOW);
-    analogWrite(PWMA, 200);
+    analogWrite(PWMA, speed);
   }
 }
