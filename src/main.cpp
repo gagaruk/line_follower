@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include <SPI.h>
+#include <RF24.h>
+#include <nRF24L01.h>
 
 #define mA1 7
 #define mA2 8
@@ -19,6 +22,14 @@
 #define IR 2
 
 int sensorVals[8];
+
+const byte address[][6] = {"00001", "00002"};
+RF24 radio(10,9);
+#define transmissonInterval 500 //ms
+int prev_t=0;
+
+double pidConstants[3] = {0.0, 0.0, 0.0};
+
 
 void forward(bool,bool,int);
 
@@ -42,6 +53,13 @@ void setup() {
   //A6 and A7 are input-only pins and require no pinMode decleration
   pinMode(IR, OUTPUT);
   digitalWrite(IR, HIGH);
+
+  radio.begin();
+  radio.openWritingPipe(address[0]);
+  radio.openReadingPipe(1,address[1]);
+  radio.setChannel(76);
+  radio.setDataRate(RF24_250KBPS);
+  radio.setPALevel(RF24_PA_MAX);
 }
 
 
@@ -68,7 +86,17 @@ void loop() {
   Serial.println("------------------------------------------------");
   Serial.println("");
 
-  delay(500);
+  radio.stopListening();
+  if(millis() - prev_t < transmissonInterval){
+    radio.write(&sensorVals, sizeof(sensorVals));
+    prev_t = millis();
+  }else{
+    prev_t=0;
+  }
+
+  radio.startListening();
+  radio.read(&pidConstants, sizeof(pidConstants));
+
 }
 
 void forward(bool m1, bool m2, int speed){
