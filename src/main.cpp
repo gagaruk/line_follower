@@ -11,30 +11,27 @@
 #define PWMA 9
 #define PWMB 3
 
-#define SenD0 A0
-#define SenD1 A1
-#define SenD2 A2
-#define SenD3 A3
-#define SenD4 A4
-#define SenD5 A5
-#define SenD6 A6
-#define SenD7 A7
-#define IR 2
+const byte sensorPins[9] = {A0, A1, A2, A3, A4, A5, A6, A7, 2};
+const double sensorWeights[8] = {-4.1, -3.4, -2.2, -1.2, 1.2, 2.2, 3.4, 4.1};
+int sensorVals[8], weightedSensorVals[8];
 
-int sensorVals[8];
 
 const byte address[][6] = {"00001", "00002"};
 RF24 radio(10,9);
 #define transmissonInterval 500 //ms
 int prev_t=0;
 
-double pidConstants[3] = {0.0, 0.0, 0.0};
+double kp, kd, ki = 0.0;
 
 
 void forward(bool,bool,int);
+void radioComs();
+void readSensorVals();
+void calculateWeightedSensorVals();
+double calculateError();
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(57600);
 
   pinMode(STBY, OUTPUT);
   pinMode(mA1, OUTPUT);
@@ -44,15 +41,12 @@ void setup() {
   pinMode(PWMA, OUTPUT);
   pinMode(PWMB, OUTPUT);
 
-  pinMode(SenD0, INPUT);
-  pinMode(SenD1, INPUT);
-  pinMode(SenD2, INPUT);
-  pinMode(SenD3, INPUT);
-  pinMode(SenD4, INPUT);
-  pinMode(SenD5, INPUT);
-  //A6 and A7 are input-only pins and require no pinMode decleration
-  pinMode(IR, OUTPUT);
-  digitalWrite(IR, HIGH);
+  for(int i=0; i<8; i++){
+    pinMode(sensorPins[i], INPUT);
+  }
+ 
+  pinMode(sensorPins[8], OUTPUT);
+  digitalWrite(sensorPins[8], HIGH);
 
   radio.begin();
   radio.openWritingPipe(address[0]);
@@ -65,37 +59,10 @@ void setup() {
 
 void loop() {
   forward(false, false, 200);
-
-  sensorVals[0] = analogRead(SenD0);
-  sensorVals[1] = analogRead(SenD1);
-  sensorVals[2] = analogRead(SenD2);
-  sensorVals[3] = analogRead(SenD3);
-  sensorVals[4] = analogRead(SenD4);
-  sensorVals[5] = analogRead(SenD5);
-  sensorVals[6] = analogRead(SenD6);
-  sensorVals[7] = analogRead(SenD7);
-
-  for( int i = 0; i < 8; i++){
-    Serial.print("SensorVal");
-    Serial.print(i);
-    Serial.print(":");
-    Serial.print(sensorVals[i]);
-    Serial.print("\t");
-  }
-  Serial.println("");
-  Serial.println("------------------------------------------------");
-  Serial.println("");
-
-  radio.stopListening();
-  if(millis() - prev_t < transmissonInterval){
-    radio.write(&sensorVals, sizeof(sensorVals));
-    prev_t = millis();
-  }else{
-    prev_t=0;
-  }
-
-  radio.startListening();
-  radio.read(&pidConstants, sizeof(pidConstants));
+  readSensorVals();
+  calculateWeightedSensorVals();
+  double error = calculateError();
+  radioComs();
 
 }
 
@@ -122,4 +89,59 @@ void forward(bool m1, bool m2, int speed){
     digitalWrite(mB1, LOW);
     digitalWrite(mB2, LOW);
   }
+}
+
+
+void readSensorVals(){
+  for(int i=0; i<8; i++){
+    sensorVals[i] = analogRead(sensorPins[i]);
+  }
+  for( int i = 0; i < 8; i++){
+    Serial.print("SensorVal");
+    Serial.print(i);
+    Serial.print(":");
+    Serial.print(sensorVals[i]);
+    Serial.print("\t");
+  }
+  Serial.println("");
+  Serial.println("------------------------------------------------");
+  Serial.println("");
+}
+
+void radioComs(){
+  radio.stopListening();
+  if(millis() - prev_t < transmissonInterval){
+    radio.write(&sensorVals, sizeof(sensorVals));
+    prev_t = millis();
+  }else{
+    prev_t=0;
+  }
+  
+  radio.startListening();
+  int pidConstants[3];
+  radio.read(&pidConstants, sizeof(pidConstants));  
+  Serial.print(pidConstants[0]);
+  Serial.print(pidConstants[1]);
+  Serial.println(pidConstants[2]);
+}
+
+
+void calculateWeightedSensorVals(){
+  for(int i = 0; i<8; i++){
+    weightedSensorVals[i] = sensorVals[i]*sensorWeights[i];
+  }
+
+}
+
+double calculateError(){
+  double weightedSum, rawSum, error = 0;
+  
+  for(int i = 0; i < 8; i++){
+    rawSum += sensorVals[i];
+    weightedSum += weightedSensorVals[i];
+  }
+  error = weightedSum / rawSum;
+  Serial.print("Error: ");
+  Serial.println(error);
+  return error;
 }
