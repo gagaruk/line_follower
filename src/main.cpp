@@ -110,19 +110,19 @@ void readSensorVals(){
 
 void radioComs(){
   radio.stopListening();
-  if(millis() - prev_t < transmissonInterval){
+  if(millis() - prev_t > transmissonInterval){
     radio.write(&sensorVals, sizeof(sensorVals));
     prev_t = millis();
-  }else{
-    prev_t=0;
   }
   
   radio.startListening();
-  int pidConstants[3];
-  radio.read(&pidConstants, sizeof(pidConstants));  
-  Serial.print(pidConstants[0]);
-  Serial.print(pidConstants[1]);
-  Serial.println(pidConstants[2]);
+  if(radio.available()){
+    int pidConstants[3];
+    radio.read(&pidConstants, sizeof(pidConstants));  
+    Serial.print(pidConstants[0]);
+    Serial.print(pidConstants[1]);
+    Serial.println(pidConstants[2]);
+  }
 }
 
 
