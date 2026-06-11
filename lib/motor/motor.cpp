@@ -14,11 +14,13 @@ void c_motor::init(){
 
 void c_motor::setSpeed(int speed){
     int direction = _inverted ? -1 : 1;
-    int finalSpeed= constrain(speed*direction, -_maxSpeed, _maxSpeed);
+    int finalSpeed= constrain(speed*direction, -_speedLimit, _speedLimit);
 
     digitalWrite(_pin1, (finalSpeed>=0) ? HIGH : LOW);
     digitalWrite(_pin2, (speed>= 0) ? LOW : HIGH);
     analogWrite(_pwmPin, abs(finalSpeed));
+
+    
 }   
 
 void c_motor::setInverted(bool isInverted){
@@ -26,5 +28,9 @@ void c_motor::setInverted(bool isInverted){
 }
 
 void c_motor::setSpeedLimit(int limit){
-    _maxSpeed = limit;
+    _speedLimit = limit;
+}
+
+int c_motor::getSpeedLimit(){
+    return _speedLimit;
 }
